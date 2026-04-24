@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ beer.nom }} — BeerCellar{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Photo et infos -->
+  <div class="col-md-5">
+    {% if beer.photo %}
+      <img src="{{ beer.photo.url }}" class="img-fluid rounded shadow" alt="{{ beer.nom }}">
+    {% else %}
+      <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
+        <i class="bi bi-cup text-muted" style="font-size: 5rem;"></i>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-7">
+    <h1 class="h2">{{ beer.nom }}</h1>
+    <p class="text-muted fs-5">{{ beer.brasserie }}</p>
+
+    <div class="mb-3">
+      <span class="badge bg-secondary fs-6">{{ beer.get_style_display }}</span>
+    </div>
+
+    {% with moy=beer.note_moyenne %}
+      {% if moy %}
+        <p class="mb-1">
+          <strong>Note moyenne :</strong>
+          <span class="text-warning ms-1">
+            {% for i in "12345" %}
+              {% if forloop.counter <= moy %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+            {% endfor %}
+          </span>
+          <span class="ms-1">{{ moy }}/5</span>
+          <small class="text-muted">({{ toutes_notes.count }} avis)</small>
+        </p>
+      {% else %}
+        <p class="text-muted">Aucune note pour l'instant.</p>
+      {% endif %}
+    {% endwith %}
+
+    <p class="text-muted small mt-2">
+      Ajoutée par {{ beer.ajoute_par.email|default:"inconnu" }}
+    </p>
+
+    <div class="d-flex gap-2 mt-3">
+      <a href="{% url 'beer-edit' beer.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil"></i> Modifier
+      </a>
+      <a href="{% url 'beer-delete' beer.pk %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash"></i> Supprimer
+      </a>
+      <a href="{% url 'beer-list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+      </a>
+    </div>
+  </div>
+</div>
+
+<hr class="my-4">
+
+<div class="row g-4">
+  <!-- Formulaire de note -->
+  <div class="col-md-5">
+    <h4>
+      {% if ma_note %}
+        <i class="bi bi-star-fill text-warning"></i> Ma note
+      {% else %}
+        <i class="bi bi-star text-warning"></i> Noter cette bière
+      {% endif %}
+    </h4>
+
+    <form method="post" action="{% url 'beer-noter' beer.pk %}">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Note (1-5)</label>
+        {{ note_form.note }}
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Commentaire</label>
+        {{ note_form.commentaire }}
+      </div>
+      <button type="submit" class="btn btn-warning">
+        <i class="bi bi-check-lg"></i>
+        {% if ma_note %}Mettre à jour{% else %}Enregistrer{% endif %}
+      </button>
+      {% if ma_note %}
+        <a href="{% url 'beer-supprimer-note' beer.pk %}" class="btn btn-outline-danger ms-2">
+          Supprimer ma note
+        </a>
+      {% endif %}
+    </form>
+
+    {% if ma_note %}
+      <div class="mt-3 p-3 bg-light rounded">
+        <strong>Ma note actuelle :</strong>
+        <span class="text-warning ms-1">
+          {% for i in "12345" %}
+            {% if forloop.counter <= ma_note.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+          {% endfor %}
+        </span>
+        {% if ma_note.commentaire %}
+          <p class="mt-2 mb-0 fst-italic">"{{ ma_note.commentaire }}"</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Tous les avis -->
+  <div class="col-md-7">
+    <h4>Avis des utilisateurs</h4>
+    {% if toutes_notes %}
+      <ul class="list-group">
+        {% for n in toutes_notes %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong>{{ n.user.email }}</strong>
+              <span class="text-warning">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= n.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                {% endfor %}
+              </span>
+            </div>
+            {% if n.commentaire %}
+              <p class="mb-0 mt-1 text-muted small fst-italic">"{{ n.commentaire }}"</p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">Aucun avis pour l'instant. Sois le premier !</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

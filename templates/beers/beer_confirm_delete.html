@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer {{ beer.nom }} — BeerCellar{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-sm-10 col-md-6 col-lg-4 text-center">
+    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+    <h2 class="mt-3">Supprimer cette bière ?</h2>
+    <p class="text-muted">
+      <strong>{{ beer.nom }}</strong> — {{ beer.brasserie }}<br>
+      Cette action supprimera également toutes les notes associées.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex gap-2 justify-content-center mt-4">
+        <button type="submit" class="btn btn-danger">
+          <i class="bi bi-trash"></i> Oui, supprimer
+        </button>
+        <a href="{% url 'beer-detail' beer.pk %}" class="btn btn-outline-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

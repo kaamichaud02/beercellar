@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Catalogue — BeerCellar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    Catalogue
+    <span class="badge bg-secondary">{{ page_obj.paginator.count }}</span>
+  </h1>
+  <a href="{% url 'beer-add' %}" class="btn btn-warning">
+    <i class="bi bi-plus-lg"></i> Ajouter une bière
+  </a>
+</div>
+
+{% if beers %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+    {% for beer in beers %}
+    {% with ma_note=user_notes|default_if_none:None %}
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        {% if beer.photo %}
+          <img src="{{ beer.photo.url }}" class="card-img-top beer-photo" alt="{{ beer.nom }}">
+        {% else %}
+          <div class="card-img-top beer-photo-placeholder d-flex align-items-center justify-content-center bg-light">
+            <i class="bi bi-cup fs-1 text-muted"></i>
+          </div>
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title mb-1">{{ beer.nom }}</h5>
+          <p class="text-muted small mb-2">{{ beer.brasserie }}</p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-secondary">{{ beer.get_style_display }}</span>
+            {% with moy=beer.note_moyenne %}
+              {% if moy %}
+                <span class="text-warning">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= moy %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+                  {% endfor %}
+                  <small class="text-muted ms-1">{{ moy }}</small>
+                </span>
+              {% else %}
+                <span class="text-muted small">Pas encore noté</span>
+              {% endif %}
+            {% endwith %}
+          </div>
+          {% if user_notes %}
+            {% with ma_note=user_notes|dictsort:beer.pk %}{% endwith %}
+          {% endif %}
+        </div>
+        <div class="card-footer">
+          <a href="{% url 'beer-detail' beer.pk %}" class="btn btn-sm btn-outline-secondary w-100">
+            Voir détails &amp; noter
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+
+  {% if is_paginated %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédent</a>
+        </li>
+      {% endif %}
+      <li class="page-item disabled">
+        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      </li>
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivant</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+{% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-cup fs-1 text-muted"></i>
+    <p class="mt-3 text-muted">Le catalogue est vide pour l'instant.</p>
+    <a href="{% url 'beer-add' %}" class="btn btn-warning mt-2">
+      <i class="bi bi-plus-lg"></i> Ajouter la première bière
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,23 @@
+services:
+  web:
+    image: ghcr.io/kaamichaud02/beercellar:latest
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=${DATABASE_URL}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET}
+    volumes:
+      - media_files:/app/media
+      - static_files:/app/staticfiles
+
+volumes:
+  media_files:
+  static_files:
