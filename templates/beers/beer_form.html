@@ -24,7 +24,7 @@
           <i class="bi bi-x-lg"></i> Fermer le scanner
         </button>
       </div>
-      <div id="scan-status" class="mt-2 small text-muted"></div>
+      <div id="scan-status" class="mt-2 small"></div>
     </div>
     {% endif %}
 
@@ -78,11 +78,15 @@ function detectStyle(text) {
   return "autre";
 }
 
+function setStatus(html) {
+  document.getElementById("scan-status").innerHTML = html;
+}
+
 let html5QrCode = null;
 
 document.getElementById("btn-scanner").addEventListener("click", () => {
   document.getElementById("scanner-container").style.display = "block";
-  document.getElementById("scan-status").textContent = "Pointez la caméra vers le code-barres…";
+  setStatus('<span class="text-muted">Pointez la caméra vers le code-barres…</span>');
 
   html5QrCode = new Html5Qrcode("reader");
   html5QrCode.start(
@@ -91,52 +95,75 @@ document.getElementById("btn-scanner").addEventListener("click", () => {
     async (barcode) => {
       await html5QrCode.stop();
       document.getElementById("scanner-container").style.display = "none";
-      document.getElementById("scan-status").textContent = "Code détecté : " + barcode + " — recherche en cours…";
-      await fetchBeerInfo(barcode);
+      setStatus(`<span class="text-muted">Code détecté : <strong>${barcode}</strong> — vérification…</span>`);
+      await handleBarcode(barcode);
     },
     () => {}
   ).catch(() => {
-    document.getElementById("scan-status").textContent = "Impossible d'accéder à la caméra.";
+    setStatus('<span class="text-danger">Impossible d\'accéder à la caméra.</span>');
   });
 });
 
 document.getElementById("btn-stop-scanner").addEventListener("click", () => {
   if (html5QrCode) html5QrCode.stop().catch(() => {});
   document.getElementById("scanner-container").style.display = "none";
-  document.getElementById("scan-status").textContent = "";
+  setStatus("");
 });
 
-async function fetchBeerInfo(barcode) {
+async function handleBarcode(barcode) {
+  // 1. Vérifier si déjà dans la BD
+  const dbRes = await fetch(`/beers/check-barcode/?code=${encodeURIComponent(barcode)}`);
+  const dbData = await dbRes.json();
+
+  if (dbData.found) {
+    setStatus(`
+      <div class="alert alert-warning mb-0">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>${dbData.nom}</strong> (${dbData.brasserie}) existe déjà dans la cave.
+        <a href="/beers/${dbData.pk}/" class="btn btn-sm btn-warning ms-2">Voir la fiche</a>
+      </div>`);
+    return;
+  }
+
+  // 2. Chercher dans Open Food Facts
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
     const data = await res.json();
+
     if (data.status !== 1) {
-      document.getElementById("scan-status").textContent = "Bière non trouvée dans la base de données.";
+      // 3. Non trouvé nulle part
+      setStatus(`
+        <div class="alert alert-info mb-0">
+          <i class="bi bi-question-circle me-2"></i>
+          Bière introuvable dans la base de données Open Food Facts.
+          <button type="button" class="btn btn-sm btn-warning ms-2" id="btn-ajouter-quand-meme">
+            Ajouter quand même
+          </button>
+        </div>`);
+      document.getElementById("btn-ajouter-quand-meme").addEventListener("click", () => {
+        document.getElementById("id_code_barre").value = barcode;
+        setStatus('<span class="text-muted">Code-barres pré-rempli — complétez les informations manuellement.</span>');
+        document.getElementById("id_nom").focus();
+      });
       return;
     }
+
+    // 4. Trouvé dans Open Food Facts
     const p = data.product;
-
-    const nom = p.product_name || p.product_name_fr || "";
-    const brasserie = p.brands || "";
-    const categories = p.categories || "";
-    const style = detectStyle(categories);
-    const volume = p.quantity || "";
-    const abv = p.alcohol_by_volume || p.nutriments?.["alcohol_100g"] || "";
-    const pays = (p.origins || p.countries || "").split(",")[0].trim();
-    const imageUrl = p.image_front_url || p.image_url || "";
-
-    document.getElementById("id_nom").value = nom;
-    document.getElementById("id_brasserie").value = brasserie;
+    document.getElementById("id_nom").value = p.product_name || p.product_name_fr || "";
+    document.getElementById("id_brasserie").value = p.brands || "";
+    const style = detectStyle(p.categories || "");
     if (style) document.getElementById("id_style").value = style;
-    document.getElementById("id_volume").value = volume;
+    document.getElementById("id_volume").value = p.quantity || "";
+    const abv = p.alcohol_by_volume || p.nutriments?.["alcohol_100g"] || "";
     if (abv) document.getElementById("id_degre_alcool").value = parseFloat(abv).toFixed(1);
-    document.getElementById("id_pays_origine").value = pays;
-    document.getElementById("id_image_url").value = imageUrl;
+    document.getElementById("id_pays_origine").value = (p.origins || p.countries || "").split(",")[0].trim();
+    document.getElementById("id_image_url").value = p.image_front_url || p.image_url || "";
+    document.getElementById("id_code_barre").value = barcode;
 
-    document.getElementById("scan-status").innerHTML =
-      `<span class="text-success"><i class="bi bi-check-circle"></i> Informations trouvées — vérifiez et complétez si nécessaire.</span>`;
+    setStatus('<span class="text-success"><i class="bi bi-check-circle"></i> Informations trouvées — vérifiez et complétez si nécessaire.</span>');
   } catch {
-    document.getElementById("scan-status").textContent = "Erreur lors de la recherche.";
+    setStatus('<span class="text-danger">Erreur lors de la recherche.</span>');
   }
 }
 </script>

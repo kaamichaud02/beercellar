@@ -5,7 +5,7 @@ from .models import Beer, UserBeerNote
 class BeerForm(forms.ModelForm):
     class Meta:
         model = Beer
-        fields = ["nom", "brasserie", "style", "volume", "degre_alcool", "pays_origine", "photo", "image_url"]
+        fields = ["nom", "brasserie", "style", "volume", "degre_alcool", "pays_origine", "photo", "image_url", "code_barre"]
         widgets = {
             "nom": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Duvel"}),
             "brasserie": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: Moortgat"}),
@@ -19,6 +19,7 @@ class BeerForm(forms.ModelForm):
                 "capture": "environment",
             }),
             "image_url": forms.URLInput(attrs={"class": "form-control", "placeholder": "URL image automatique"}),
+            "code_barre": forms.TextInput(attrs={"class": "form-control", "placeholder": "Ex: 5410228193441"}),
         }
 
 

@@ -7,6 +7,7 @@ urlpatterns = [
     path("<int:pk>/", views.BeerDetailView.as_view(), name="beer-detail"),
     path("<int:pk>/edit/", views.BeerUpdateView.as_view(), name="beer-edit"),
     path("<int:pk>/delete/", views.BeerDeleteView.as_view(), name="beer-delete"),
+    path("check-barcode/", views.check_barcode, name="beer-check-barcode"),
     path("<int:pk>/noter/", views.noter_biere, name="beer-noter"),
     path("<int:pk>/supprimer-note/", views.supprimer_note, name="beer-supprimer-note"),
 ]

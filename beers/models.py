@@ -37,6 +37,12 @@ class Beer(models.Model):
         null=True,
         verbose_name="Photo",
     )
+    code_barre = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        verbose_name="Code-barres",
+    )
     image_url = models.URLField(
         blank=True,
         default="",

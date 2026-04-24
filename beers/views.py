@@ -5,6 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.db import models
+from django.http import JsonResponse
 from .models import Beer, UserBeerNote
 from .forms import BeerForm, UserBeerNoteForm
 
@@ -20,7 +21,9 @@ class BeerListView(LoginRequiredMixin, ListView):
         q = self.request.GET.get("q", "").strip()
         if q:
             qs = qs.filter(
-                models.Q(nom__icontains=q) | models.Q(brasserie__icontains=q)
+                models.Q(nom__icontains=q) |
+                models.Q(brasserie__icontains=q) |
+                models.Q(code_barre__icontains=q)
             )
         return qs
 
@@ -72,6 +75,18 @@ class BeerDeleteView(LoginRequiredMixin, DeleteView):
     model = Beer
     template_name = "beers/beer_confirm_delete.html"
     success_url = reverse_lazy("beer-list")
+
+
+@login_required
+def check_barcode(request):
+    code = request.GET.get("code", "").strip()
+    if not code:
+        return JsonResponse({"found": False})
+    try:
+        beer = Beer.objects.get(code_barre=code)
+        return JsonResponse({"found": True, "pk": beer.pk, "nom": beer.nom, "brasserie": beer.brasserie})
+    except Beer.DoesNotExist:
+        return JsonResponse({"found": False})
 
 
 @login_required
