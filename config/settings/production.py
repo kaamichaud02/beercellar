@@ -3,3 +3,4 @@ from .base import *
 SECURE_HSTS_SECONDS = 31536000
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ["https://beer.kaa.zone"]
