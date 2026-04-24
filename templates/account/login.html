@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 
 {% block title %}Connexion — BeerCellar{% endblock %}
 
@@ -13,6 +14,15 @@
 
     <div class="card shadow-sm">
       <div class="card-body p-4">
+
+        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100 mb-3">
+          <i class="bi bi-google me-2"></i> Continuer avec Google
+        </a>
+
+        <div class="d-flex align-items-center mb-3">
+          <hr class="flex-grow-1"><span class="px-2 text-muted small">ou</span><hr class="flex-grow-1">
+        </div>
+
         <form method="post">
           {% csrf_token %}
           {% for field in form %}
@@ -27,10 +37,11 @@
           {% if form.non_field_errors %}
             <div class="alert alert-danger">{{ form.non_field_errors|join:", " }}</div>
           {% endif %}
-          <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-warning btn-lg">Se connecter</button>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-warning">Se connecter</button>
           </div>
         </form>
+
       </div>
     </div>
   </div>
