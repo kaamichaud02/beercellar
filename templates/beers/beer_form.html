@@ -13,6 +13,21 @@
       {% endif %}
     </h2>
 
+    {% if not form.instance.pk %}
+    <div class="mb-4">
+      <button type="button" class="btn btn-outline-warning w-100" id="btn-scanner">
+        <i class="bi bi-upc-scan me-2"></i> Scanner un code-barres
+      </button>
+      <div id="scanner-container" class="mt-2" style="display:none;">
+        <div id="reader" class="rounded border"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2 w-100" id="btn-stop-scanner">
+          <i class="bi bi-x-lg"></i> Fermer le scanner
+        </button>
+      </div>
+      <div id="scan-status" class="mt-2 small text-muted"></div>
+    </div>
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
       {% for field in form %}
@@ -36,4 +51,85 @@
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not form.instance.pk %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const STYLE_MAP = {
+  "lager": "lager", "pilsner": "pilsner", "pilsen": "pilsner",
+  "blonde": "blonde", "blanche": "blanche", "wheat": "blanche", "witbier": "blanche",
+  "ipa": "ipa", "india pale ale": "ipa",
+  "pale ale": "pale_ale",
+  "stout": "stout", "porter": "porter",
+  "ambrée": "ambre", "amber": "ambre", "red ale": "ambre",
+  "triple": "triple", "tripel": "triple",
+  "double": "double", "dubbel": "double",
+  "saison": "saison", "lambic": "lambic",
+};
+
+function detectStyle(text) {
+  if (!text) return "";
+  const lower = text.toLowerCase();
+  for (const [key, val] of Object.entries(STYLE_MAP)) {
+    if (lower.includes(key)) return val;
+  }
+  return "autre";
+}
+
+let html5QrCode = null;
+
+document.getElementById("btn-scanner").addEventListener("click", () => {
+  document.getElementById("scanner-container").style.display = "block";
+  document.getElementById("scan-status").textContent = "Pointez la caméra vers le code-barres…";
+
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 150 } },
+    async (barcode) => {
+      await html5QrCode.stop();
+      document.getElementById("scanner-container").style.display = "none";
+      document.getElementById("scan-status").textContent = "Code détecté : " + barcode + " — recherche en cours…";
+      await fetchBeerInfo(barcode);
+    },
+    () => {}
+  ).catch(() => {
+    document.getElementById("scan-status").textContent = "Impossible d'accéder à la caméra.";
+  });
+});
+
+document.getElementById("btn-stop-scanner").addEventListener("click", () => {
+  if (html5QrCode) html5QrCode.stop().catch(() => {});
+  document.getElementById("scanner-container").style.display = "none";
+  document.getElementById("scan-status").textContent = "";
+});
+
+async function fetchBeerInfo(barcode) {
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await res.json();
+    if (data.status !== 1) {
+      document.getElementById("scan-status").textContent = "Bière non trouvée dans la base de données.";
+      return;
+    }
+    const p = data.product;
+    const nom = p.product_name || p.product_name_fr || "";
+    const brasserie = p.brands || "";
+    const categories = p.categories || "";
+    const style = detectStyle(categories);
+
+    document.getElementById("id_nom").value = nom;
+    document.getElementById("id_brasserie").value = brasserie;
+    if (style) document.getElementById("id_style").value = style;
+
+    document.getElementById("scan-status").innerHTML =
+      `<span class="text-success"><i class="bi bi-check-circle"></i> Informations trouvées — vérifiez et complétez si nécessaire.</span>`;
+  } catch {
+    document.getElementById("scan-status").textContent = "Erreur lors de la recherche.";
+  }
+}
+</script>
+{% endif %}
 {% endblock %}

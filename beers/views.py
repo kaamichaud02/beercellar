@@ -4,6 +4,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
+from django.db import models
 from .models import Beer, UserBeerNote
 from .forms import BeerForm, UserBeerNoteForm
 
@@ -15,11 +16,17 @@ class BeerListView(LoginRequiredMixin, ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        return Beer.objects.prefetch_related("notes").all()
+        qs = Beer.objects.prefetch_related("notes").all()
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                models.Q(nom__icontains=q) | models.Q(brasserie__icontains=q)
+            )
+        return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        # Notes de l'utilisateur courant indexées par beer_id
+        ctx["q"] = self.request.GET.get("q", "")
         user_notes = {
             n.beer_id: n
             for n in UserBeerNote.objects.filter(user=self.request.user)
