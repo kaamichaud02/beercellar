@@ -70,10 +70,16 @@ class BeerDeleteView(LoginRequiredMixin, DeleteView):
 @login_required
 def noter_biere(request, pk):
     beer = get_object_or_404(Beer, pk=pk)
-    note_obj, _ = UserBeerNote.objects.get_or_create(user=request.user, beer=beer)
-    form = UserBeerNoteForm(request.POST, instance=note_obj)
+    try:
+        note_obj = UserBeerNote.objects.get(user=request.user, beer=beer)
+        form = UserBeerNoteForm(request.POST, instance=note_obj)
+    except UserBeerNote.DoesNotExist:
+        form = UserBeerNoteForm(request.POST)
     if form.is_valid():
-        form.save()
+        note = form.save(commit=False)
+        note.user = request.user
+        note.beer = beer
+        note.save()
         messages.success(request, "Note enregistrée !")
     return redirect("beer-detail", pk=pk)
 
