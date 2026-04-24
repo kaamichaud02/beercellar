@@ -21,9 +21,6 @@ INSTALLED_APPS = [
     # Third-party
     "allauth",
     "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.microsoft",
     # Local
     "beers",
 ]
@@ -75,24 +72,6 @@ ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "APP": {
-            "client_id": env("GOOGLE_CLIENT_ID", default=""),
-            "secret": env("GOOGLE_CLIENT_SECRET", default=""),
-        },
-        "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
-    },
-    "microsoft": {
-        "APP": {
-            "client_id": env("MICROSOFT_CLIENT_ID", default=""),
-            "secret": env("MICROSOFT_CLIENT_SECRET", default=""),
-        },
-        "SCOPE": ["User.Read"],
-        "AUTH_PARAMS": {"prompt": "select_account"},
-    },
-}
 
 LOGIN_REDIRECT_URL = "/beers/"
 LOGOUT_REDIRECT_URL = "/"
