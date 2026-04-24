@@ -4,10 +4,12 @@
 
 {% block content %}
 <div class="row g-4">
-  <!-- Photo et infos -->
+  <!-- Photo -->
   <div class="col-md-5">
     {% if beer.photo %}
       <img src="{{ beer.photo.url }}" class="img-fluid rounded shadow" alt="{{ beer.nom }}">
+    {% elif beer.image_url %}
+      <img src="{{ beer.image_url }}" class="img-fluid rounded shadow" alt="{{ beer.nom }}">
     {% else %}
       <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 300px;">
         <i class="bi bi-cup text-muted" style="font-size: 5rem;"></i>
@@ -15,13 +17,26 @@
     {% endif %}
   </div>
 
+  <!-- Infos -->
   <div class="col-md-7">
     <h1 class="h2">{{ beer.nom }}</h1>
-    <p class="text-muted fs-5">{{ beer.brasserie }}</p>
+    <p class="text-muted fs-5 mb-2">{{ beer.brasserie }}</p>
 
     <div class="mb-3">
       <span class="badge bg-secondary fs-6">{{ beer.get_style_display }}</span>
     </div>
+
+    <ul class="list-unstyled mb-3">
+      {% if beer.degre_alcool %}
+        <li><i class="bi bi-droplet-half text-warning me-2"></i><strong>Alcool :</strong> {{ beer.degre_alcool }}%</li>
+      {% endif %}
+      {% if beer.volume %}
+        <li><i class="bi bi-cup me-2 text-warning"></i><strong>Volume :</strong> {{ beer.volume }}</li>
+      {% endif %}
+      {% if beer.pays_origine %}
+        <li><i class="bi bi-geo-alt me-2 text-warning"></i><strong>Origine :</strong> {{ beer.pays_origine }}</li>
+      {% endif %}
+    </ul>
 
     {% with moy=beer.note_moyenne %}
       {% if moy %}

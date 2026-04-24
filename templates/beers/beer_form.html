@@ -115,14 +115,23 @@ async function fetchBeerInfo(barcode) {
       return;
     }
     const p = data.product;
+
     const nom = p.product_name || p.product_name_fr || "";
     const brasserie = p.brands || "";
     const categories = p.categories || "";
     const style = detectStyle(categories);
+    const volume = p.quantity || "";
+    const abv = p.alcohol_by_volume || p.nutriments?.["alcohol_100g"] || "";
+    const pays = (p.origins || p.countries || "").split(",")[0].trim();
+    const imageUrl = p.image_front_url || p.image_url || "";
 
     document.getElementById("id_nom").value = nom;
     document.getElementById("id_brasserie").value = brasserie;
     if (style) document.getElementById("id_style").value = style;
+    document.getElementById("id_volume").value = volume;
+    if (abv) document.getElementById("id_degre_alcool").value = parseFloat(abv).toFixed(1);
+    document.getElementById("id_pays_origine").value = pays;
+    document.getElementById("id_image_url").value = imageUrl;
 
     document.getElementById("scan-status").innerHTML =
       `<span class="text-success"><i class="bi bi-check-circle"></i> Informations trouvées — vérifiez et complétez si nécessaire.</span>`;

@@ -37,6 +37,30 @@ class Beer(models.Model):
         null=True,
         verbose_name="Photo",
     )
+    image_url = models.URLField(
+        blank=True,
+        default="",
+        verbose_name="URL image (Open Food Facts)",
+    )
+    volume = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        verbose_name="Volume",
+    )
+    degre_alcool = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        blank=True,
+        null=True,
+        verbose_name="Degré d'alcool (%)",
+    )
+    pays_origine = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        verbose_name="Pays d'origine",
+    )
     ajoute_par = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
